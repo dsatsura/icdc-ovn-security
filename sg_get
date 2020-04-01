@@ -1,0 +1,4 @@
+#!/bin/bash
+. auth
+
+curl -H "X-Auth-Token: $token" -k https://localhost:9696/v2.0/security-groups 2>/dev/null | python -m json.tool

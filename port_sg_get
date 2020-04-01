@@ -1,0 +1,21 @@
+#!/bin/bash
+. auth
+
+ARGS=$(getopt -o 'p:' --long 'port:' -- "$@") || exit
+eval "set -- $ARGS"
+
+data=""
+while true; do
+    case $1 in
+      (-p|--port)
+        PORT_ID=$2; shift 2;;
+      (--)  shift; break;;
+      (*)   exit 1;;           # error
+    esac
+done
+[ -z "$PORT_ID" ] && echo "$(basename $0) -p|--port PORT_ID" && exit 1
+
+remaining=("$@")
+
+response=`curl -H "X-Auth-Token: $token" -k https://localhost:9696/v2.0/ports/$PORT_ID 2>/dev/null`
+echo "$response" | python -m json.tool

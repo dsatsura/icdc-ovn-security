@@ -1,0 +1,40 @@
+#!/bin/bash
+. auth
+
+ARGS=$(getopt -o 'n:d:f:t:e:p:i:r:s:' --long 'name:,direction:,port_range_min:,port_range_max:,ethertype:,protocol:,remote_ip_prefix:,remote_group_id:,security_group_id:' -- "$@") || exit
+eval "set -- $ARGS"
+
+data=""
+while true; do
+    case $1 in
+      (-n|--name)
+        data="$data, \"description\":\"$2\""; shift 2;;
+      (-d|--direction)
+        data="$data, \"direction\":\"$2\""; shift 2;;
+      (-f|--port_range_min)
+        data="$data, \"port_range_min\":\"$2\""; shift 2;;
+      (-t|--port_range_max)
+        data="$data, \"port_range_max\":\"$2\""; shift 2;;
+      (-e|--ethertype)
+        data="$data, \"ethertype\":\"$2\""; shift 2;;
+      (-p|--protocol)
+        data="$data, \"protocol\":\"$2\""; shift 2;;
+      (-i|--remote_ip_prefix)
+        data="$data, \"remote_ip_prefix\":\"$2\""; shift 2;;
+      (-r|--remote_group_id)
+        data="$data, \"remote_group_id\":\"$2\""; shift 2;;
+      (-s|--security_group_id)
+        data="$data, \"security_group_id\":\"$2\""; shift 2;;
+      (--)  shift; break;;
+      (*)   exit 1;;           # error
+    esac
+done
+data=$(echo "$data" | cut -c3-)
+
+remaining=("$@")
+
+data="{ \"security_group_rule\": { ${data} } }"
+echo "$data" | python -m json.tool
+
+response=`curl -H "X-Auth-Token: $token" -X POST -k https://localhost:9696/v2.0/security-group-rules -d "$data" 2>/dev/null`
+echo "$response" | python -m json.tool

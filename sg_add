@@ -1,0 +1,27 @@
+#!/bin/bash
+. auth
+
+ARGS=$(getopt -o 'n:d:' --long 'name:,description:' -- "$@") || exit
+eval "set -- $ARGS"
+
+data=""
+while true; do
+    case $1 in
+      (-n|--name)
+        NAME="$2"; shift 2;;
+      (-d|--description)
+        data="$data, \"descrpition\":\"$2\""
+        shift 2;;
+      (--)  shift; break;;
+      (*)   exit 1;;           # error
+    esac
+done
+data=$(echo "$data" | cut -c3-)
+
+[ -z "$NAME" ] && echo "$(basename $0) -n|--name NAME" && exit 1
+
+remaining=("$@")
+
+data="{ \"security_group\": { \"name\":\"$NAME\" } }"
+response=`curl -H "X-Auth-Token: $token" -X POST -k https://localhost:9696/v2.0/security-groups -d "$data" 2>/dev/null`
+echo "$response" | python -m json.tool

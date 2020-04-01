@@ -1,0 +1,36 @@
+#!/bin/bash
+. auth
+
+ARGS=$(getopt -o 'p:s:' --long 'port:,security_groups:' -- "$@") || exit
+eval "set -- $ARGS"
+
+data=""
+while true; do
+    case $1 in
+      (-p|--port)
+        PORT_ID=$2; shift 2;;
+      (-s|--security_groups)
+        IFS=',' read -ra sg_list <<< "$2"
+        json_list=""
+        for sg in "${sg_list[@]}"; do
+          json_list="$json_list, \"$sg\""
+        done
+        json_list=$(echo "$json_list" | cut -c3-)
+        data="$data, \"security_groups\": [ $json_list ]"
+        shift 2;;
+      (--)  shift; break;;
+      (*)   exit 1;;           # error
+    esac
+done
+
+
+[ -z "$PORT_ID" ] && echo "$(basename $0) -p|--port PORT_ID -s|--security_group SECURITY_GROUP_ID" && exit 1
+data=$(echo "$data" | cut -c3-)
+
+
+remaining=("$@")
+
+data="{ \"port\": { ${data} } }"
+
+response=`curl -H "X-Auth-Token: $token" -X PUT -k https://localhost:9696/v2.0/ports/$PORT_ID -d "$data" 2>/dev/null`
+echo "$response" | python -m json.tool

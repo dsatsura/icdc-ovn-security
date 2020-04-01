@@ -1,0 +1,22 @@
+#!/bin/bash
+. auth
+
+ARGS=$(getopt -o 'i:' --long 'id:' -- "$@") || exit
+eval "set -- $ARGS"
+
+while true; do
+    case $1 in
+      (-i|--id)
+        sgid=$2; shift 2;;
+      (--)  shift; break;;
+      (*)   exit 1;;           # error
+    esac
+done
+
+remaining=("$@")
+
+response=$(curl -H "X-Auth-Token: $token" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json" \
+  -X DELETE -k https://localhost:9696/v2.0/security-groups/$sgid 2>/dev/null)
+echo $response

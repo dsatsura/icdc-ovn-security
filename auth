@@ -1,0 +1,4 @@
+#OVIRT_PASS
+. .pass
+
+token=$(curl -k -X POST https://localhost:35357/v2.0/tokens -d "{\"auth\":{\"tenantName\":\"admin\", \"passwordCredentials\":{\"username\":\"admin@internal\", \"password\":\"${OVIRT_PASS}\"}}}" 2>/dev/null | cut -d\" -f12)

@@ -1,0 +1,18 @@
+#!/bin/bash
+. auth
+
+ARGS=$(getopt -o 'i:' --long 'id:' -- "$@") || exit
+eval "set -- $ARGS"
+
+data=""
+while true; do
+    case $1 in
+      (-i|--id)
+        SGR_ID="$2"; shift 2;;
+      (--)  shift; break;;
+      (*)   exit 1;;           # error
+    esac
+done
+[ -z "$SGR_ID" ] && echo "$(basename $0) -i|--id NAME" && exit 1
+
+curl -H "X-Auth-Token: $token" -X DELETE -k https://localhost:9696/v2.0/security-group-rules/$SGR_ID 2>/dev/null | python -m json.tool
